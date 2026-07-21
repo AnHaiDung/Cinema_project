@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý phòng chiếu - CGV Cinema Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link active">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div class="page-header">
+    <h1 class="page-title">🏟️ Quản lý phòng chiếu</h1>
+    <p class="page-subtitle">Thêm và quản lý các phòng chiếu phim trong rạp.</p>
+  </div>
+
+  <div th:if="${successMessage}" class="alert alert-success">✅ <span th:text="${successMessage}"></span></div>
+  <div th:if="${errorMessage}" class="alert alert-danger">⚠️ <span th:text="${errorMessage}"></span></div>
+
+  <div class="admin-layout">
+    <!-- FORM -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" th:text="${auditorium.id != null ? '✏️ Sửa phòng chiếu' : '➕ Thêm phòng mới'}"></span>
+          <a th:if="${auditorium.id != null}" th:href="@{/auditoriums}" class="btn btn-outline btn-sm">✕ Hủy</a>
+        </div>
+
+        <form th:action="${auditorium.id != null ? '/auditoriums/edit/' + auditorium.id : '/auditoriums/save'}"
+              method="post" data-validate-form novalidate>
+          <div class="form-group">
+            <label class="form-label">Tên phòng *</label>
+            <input type="text" name="name" class="form-control" th:value="${auditorium.name}" placeholder="VD: Phòng A - IMAX"
+                   data-required data-label="Tên phòng">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Sức chứa (ghế) *</label>
+              <input type="text" inputmode="numeric" name="capacity" class="form-control" th:value="${auditorium.capacity}" placeholder="80"
+                     data-required data-number data-min-value="1" data-label="Sức chứa">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Định dạng màn hình *</label>
+              <select name="screenType" class="form-control" data-required data-label="Định dạng màn hình">
+                <option value="">-- Chọn --</option>
+                <option value="2D" th:selected="${auditorium.screenType == '2D'}">2D</option>
+                <option value="3D" th:selected="${auditorium.screenType == '3D'}">3D</option>
+                <option value="IMAX" th:selected="${auditorium.screenType == 'IMAX'}">IMAX</option>
+                <option value="4DX" th:selected="${auditorium.screenType == '4DX'}">4DX</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <span th:text="${auditorium.id != null ? '💾 Cập nhật' : '➕ Thêm phòng'}"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div>
+      <div class="card" style="padding:0;">
+        <div class="card-header" style="padding:1.25rem 1.5rem;margin-bottom:0;">
+          <span class="card-title">📋 Danh sách phòng chiếu</span>
+          <span style="font-size:0.8rem;color:#8b8fa8;" th:text="${auditoriums.size()} + ' phòng'"></span>
+        </div>
+
+        <div th:if="${auditoriums.empty}" class="empty-state" style="padding:3rem;">
+          <div class="empty-icon">🏟️</div>
+          <h3>Chưa có phòng chiếu</h3>
+        </div>
+
+        <div class="table-wrapper" th:unless="${auditoriums.empty}" style="border:none;border-radius:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tên phòng</th>
+                <th>Sức chứa</th>
+                <th>Định dạng</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a, iter : ${auditoriums}">
+                <td style="color:#555870;" th:text="${iter.index + 1}"></td>
+                <td style="font-weight:700;" th:text="${a.name}"></td>
+                <td th:text="${a.capacity} + ' ghế'"></td>
+                <td>
+                  <span class="badge"
+                        th:classappend="${a.screenType == 'IMAX' ? 'badge-selling' : a.screenType == '3D' ? 'badge-scheduled' : 'badge-cancelled'}"
+                        th:text="${a.screenType}"></span>
+                </td>
+                <td>
+                  <div style="display:flex;gap:0.5rem;">
+                    <a th:href="@{/auditoriums/edit/{id}(id=${a.id})}" class="btn btn-outline btn-sm">✏️ Sửa</a>
+                    <form th:action="@{/auditoriums/delete/{id}(id=${a.id})}" method="post" style="margin:0;"
+                          onsubmit="return confirm('Xác nhận xóa phòng chiếu?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/form-validation.js}"></script>
+</body>
+</html>

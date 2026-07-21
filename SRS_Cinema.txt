@@ -1,0 +1,607 @@
+
+
+
+TÀI LIỆU ĐẶC TẢ NGHIỆP VỤ
+Quản lý tài khoản
+DỰ ÁN : Cinema
+
+
+Người thực hiện : An Hải Dũng
+Ngày ban hành   : 08/07/2026
+Mã tài liệu           : SRS-CINEMA-001
+Phiên bản            : 1.0
+
+
+TÀI LIỆU ĐẶC TẢ NGHIỆP VỤ
+Quản lý lịch chiếu phim
+DỰ ÁN: Cinema Schedule Management
+
+Thông tin
+Nội dung
+Người thực hiện
+An Hải Dũng
+Ngày ban hành
+8/07/2026
+Mã tài liệu
+SRS-CINEMA-001
+Phiên bản
+1.0
+Công nghệ chính
+Spring Boot, Thymeleaf, Spring Security, Spring Data JPA, MySQL/H2
+
+
+MỤC LỤC
+PHẦN 1: GIỚI THIỆU
+1.1 Mục đích tài liệu
+1.2 Phạm vi tài liệu
+1.3 Tổng quan ứng dụng
+1.4 Thuật ngữ viết tắt
+PHẦN 2: YÊU CẦU TỔNG THỂ
+2.1 Sơ đồ quan hệ đối tượng
+2.2 Sơ đồ Use Case
+2.3 Sơ đồ luồng
+2.4 Sơ đồ chuyển trạng thái
+2.5 Phân quyền
+2.6 Site Map
+PHẦN 3: CHỨC NĂNG
+PHẦN 4: CÁC COMPONENT, THÔNG BÁO, CẢNH BÁO
+PHẦN 5: LINK ISSUE
+
+PHẦN 1: GIỚI THIỆU
+1.1 Mục đích tài liệu
+Tài liệu này mô tả yêu cầu nghiệp vụ và yêu cầu chức năng cho hệ thống web quản lý lịch chiếu phim. Tài liệu là cơ sở để phân tích, thiết kế, phát triển, kiểm thử và nghiệm thu sản phẩm.
+1.2 Phạm vi tài liệu
+Quản lý tài khoản quản trị: đăng ký, đăng nhập, đăng xuất.
+Quản lý danh mục phim và phòng chiếu.
+Lập lịch chiếu, cập nhật trạng thái suất chiếu và lọc lịch theo ngày/phim/phòng.
+Mô tả sơ đồ nghiệp vụ bằng Mermaid để có thể dán vào draw.io hoặc công cụ hỗ trợ Mermaid.
+Chưa bao gồm bán vé, chọn ghế, thanh toán trực tuyến, quản lý khách hàng hoặc phân quyền nhiều vai trò nâng cao.
+1.3 Tổng quan ứng dụng
+Ứng dụng được xây dựng bằng Spring Boot theo mô hình MVC. Frontend sử dụng Thymeleaf template và CSS tĩnh. Backend gồm controller, service, repository và entity JPA. Dữ liệu chạy thật lưu ở MySQL; môi trường demo/test dùng H2 in-memory.
+1.4 Thuật ngữ viết tắt
+STT
+Từ viết tắt
+Diễn giải
+1
+SRS
+Software Requirements Specification - tài liệu đặc tả yêu cầu phần mềm.
+2
+CRUD
+Create, Read, Update, Delete - thêm, xem, sửa, xóa dữ liệu.
+3
+MVC
+Model - View - Controller.
+4
+JPA
+Java Persistence API, dùng để ánh xạ entity với cơ sở dữ liệu.
+5
+UI
+User Interface - giao diện người dùng.
+6
+QA
+Quality Assurance - kiểm thử và đảm bảo chất lượng.
+
+PHẦN 2: YÊU CẦU TỔNG THỂ
+2.1 Sơ đồ quan hệ đối tượng
+Sơ đồ mô tả các entity chính và quan hệ dữ liệu trong hệ thống.
+quan hệ đối tượng
+
+
+2.2 Sơ đồ Use Case
+Tác nhân chính của hệ thống là người quản trị rạp phim.
+ use case
+
+
+2.3 Sơ đồ luồng
+Luồng tổng thể mô tả cách người quản trị tương tác với hệ thống từ xác thực đến xử lý nghiệp vụ.
+luồng tổng thể
+
+
+2.4 Sơ đồ chuyển trạng thái
+Trạng thái suất chiếu hiện gồm: SCHEDULED, SELLING, SOLD_OUT và CANCELLED.
+trạng thái lịch chiếu
+
+
+2.5 Phân quyền
+2.5.1 Phân quyền chức năng
+STT
+Chức năng
+Chưa đăng nhập
+Người quản trị
+1
+Đăng ký
+Được phép
+Không cần thiết
+2
+Đăng nhập
+Được phép
+Không cần thiết
+3
+Đăng xuất
+Không áp dụng
+Được phép
+4
+Quản lý phim
+Không được phép
+Được phép
+5
+Quản lý phòng chiếu
+Không được phép
+Được phép
+6
+Lập/lọc lịch chiếu
+Không được phép
+Được phép
+
+2.5.2 Phân quyền dữ liệu
+Phiên bản hiện tại áp dụng một vai trò quản trị chung. Sau khi đăng nhập, người quản trị được thao tác toàn bộ dữ liệu phim, phòng chiếu và lịch chiếu. Hệ thống chưa tách dữ liệu theo chi nhánh rạp hoặc theo nhóm người dùng.
+2.6 Site Map
+Mermaid - site map
+
+
+PHẦN 3: CHỨC NĂNG
+Danh sách chức năng và đặc tả chi tiết từng chức năng.
+STT
+Mã
+Tên chức năng
+Phân hệ
+Tác nhân (Actor)
+1
+UC-01
+Đăng ký tài khoản
+Tài khoản
+Khách hàng
+2
+UC-02
+Đăng nhập
+Tài khoản
+Người quản trị, khách hàng
+3
+UC-03
+Quản lý phim
+Danh mục
+Người quản trị
+4
+UC-04
+Quản lý phòng chiếu
+Danh mục
+Người quản trị
+5
+UC-05
+Lập lịch chiếu
+Lịch chiếu
+Người quản trị
+6
+UC-06
+Lọc lịch chiếu
+Lịch chiếu
+Người quản trị
+
+3.1. Đăng ký tài khoản
+3.1.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-01
+Mô tả
+Đăng ký tài khoản
+Tác nhân (Actor)
+Khách hàng
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người dùng chọn Đăng ký trên thanh điều hướng.
+Điều kiện cần (Pre-Condition)
+Người dùng chưa đăng nhập và chưa có tài khoản trùng tên đăng nhập/email.
+Điều kiện sau (Post-Condition)
+Tài khoản mới được lưu với mật khẩu đã mã hóa; người dùng được chuyển về trang đăng nhập.
+Luồng cơ bản (Basic Flow)
+1. Người dùng mở trang /register.2. Hệ thống hiển thị form gồm tên đăng nhập, họ tên, email, mật khẩu và nhập lại mật khẩu.3. Người dùng nhập thông tin và gửi form.4. Hệ thống kiểm tra dữ liệu bắt buộc, định dạng email, độ dài mật khẩu và mật khẩu nhập lại.5. Nếu hợp lệ, hệ thống mã hóa mật khẩu bằng BCrypt và lưu tài khoản.6. Hệ thống hiển thị thông báo đăng ký thành công và chuyển về /login.
+
+3.1.2. Sơ đồ luồng chi tiết
+Người dùng mở trang /register.
+Hệ thống hiển thị form gồm tên đăng nhập, họ tên, email, mật khẩu và nhập lại mật khẩu.
+Người dùng nhập thông tin và gửi form.
+Hệ thống kiểm tra dữ liệu bắt buộc, định dạng email, độ dài mật khẩu và mật khẩu nhập lại.
+Nếu hợp lệ, hệ thống mã hóa mật khẩu bằng BCrypt và lưu tài khoản.
+Hệ thống hiển thị thông báo đăng ký thành công và chuyển về /login.
+3.1.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.1.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+username
+Tên đăng nhập
+Text
+Có
+Duy nhất, từ 3 đến 40 ký tự.
+fullName
+Họ tên
+Text
+Có
+Tên hiển thị của người quản trị.
+email
+Email
+Email
+Có
+Duy nhất và đúng định dạng email.
+password
+Mật khẩu
+Password
+Có
+Tối thiểu 6 ký tự, lưu dưới dạng hash.
+confirmPassword
+Nhập lại mật khẩu
+Password
+Có
+Phải khớp với mật khẩu.
+
+3.2. Đăng nhập
+3.2.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-02
+Mô tả
+Đăng nhập
+Tác nhân (Actor)
+Người quản trị, khách hàng
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người dùng truy cập trang quản trị hoặc chọn Đăng nhập.
+Điều kiện cần (Pre-Condition)
+Tài khoản đã tồn tại trong hệ thống.
+Điều kiện sau (Post-Condition)
+Người dùng được xác thực và truy cập các trang quản trị.
+Luồng cơ bản (Basic Flow)
+1. Người dùng mở trang /login.2. Hệ thống hiển thị form đăng nhập.3. Người dùng nhập tên đăng nhập và mật khẩu.4. Spring Security kiểm tra thông tin với dữ liệu tài khoản.5. Nếu hợp lệ, hệ thống chuyển người dùng đến /showtimes.6. Nếu sai, hệ thống ở lại trang đăng nhập và hiển thị thông báo lỗi.
+
+3.2.2. Sơ đồ luồng chi tiết
+Người dùng mở trang /login.
+Hệ thống hiển thị form đăng nhập.
+Người dùng nhập tên đăng nhập và mật khẩu.
+Spring Security kiểm tra thông tin với dữ liệu tài khoản.
+Nếu hợp lệ, hệ thống chuyển người dùng đến /showtimes.
+Nếu sai, hệ thống ở lại trang đăng nhập và hiển thị thông báo lỗi.
+3.2.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.2.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+username
+Tên đăng nhập
+Text
+Có
+Tên đăng nhập đã đăng ký.
+password
+Mật khẩu
+Password
+Có
+Mật khẩu tương ứng với tài khoản.
+
+3.3. Quản lý phim
+3.3.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-03
+Mô tả
+Quản lý phim
+Tác nhân (Actor)
+Người quản trị
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người quản trị mở trang /movies.
+Điều kiện cần (Pre-Condition)
+Người quản trị đã đăng nhập.
+Điều kiện sau (Post-Condition)
+Danh sách phim được thêm, sửa hoặc xóa theo thao tác.
+Luồng cơ bản (Basic Flow)
+1. Người quản trị mở trang quản lý phim.2. Hệ thống hiển thị danh sách phim và form nhập phim.3. Người quản trị nhập tên phim, thể loại, thời lượng, phân loại tuổi, ngày phát hành, poster và mô tả.4. Hệ thống kiểm tra các trường bắt buộc.5. Nếu hợp lệ, hệ thống lưu phim và tải lại danh sách.6. Người quản trị có thể chọn sửa hoặc xóa phim trong danh sách.
+
+3.3.2. Sơ đồ luồng chi tiết
+Người quản trị mở trang quản lý phim.
+Hệ thống hiển thị danh sách phim và form nhập phim.
+Người quản trị nhập tên phim, thể loại, thời lượng, phân loại tuổi, ngày phát hành, poster và mô tả.
+Hệ thống kiểm tra các trường bắt buộc.
+Nếu hợp lệ, hệ thống lưu phim và tải lại danh sách.
+Người quản trị có thể chọn sửa hoặc xóa phim trong danh sách.
+3.3.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.3.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+title
+Tên phim
+Text
+Có
+Tên phim hiển thị trong lịch chiếu.
+genre
+Thể loại
+Text
+Có
+Ví dụ: hoạt hình, tâm lý, khoa học viễn tưởng.
+durationMinutes
+Thời lượng
+Number
+Có
+Số phút, phải lớn hơn 0.
+ageRating
+Phân loại tuổi
+Text
+Không
+Ví dụ: P, T13, T16.
+releaseDate
+Ngày phát hành
+Date
+Không
+Ngày phim được phát hành.
+posterUrl
+Poster
+Text
+Không
+Đường dẫn ảnh poster.
+description
+Mô tả
+Textarea
+Không
+Thông tin tóm tắt về phim.
+
+3.4. Quản lý phòng chiếu
+3.4.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-04
+Mô tả
+Quản lý phòng chiếu
+Tác nhân (Actor)
+Người quản trị
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người quản trị mở trang /auditoriums.
+Điều kiện cần (Pre-Condition)
+Người quản trị đã đăng nhập.
+Điều kiện sau (Post-Condition)
+Danh sách phòng chiếu được cập nhật.
+Luồng cơ bản (Basic Flow)
+1. Người quản trị mở trang quản lý phòng chiếu.2. Hệ thống hiển thị danh sách phòng và form nhập thông tin phòng.3. Người quản trị nhập tên phòng, sức chứa và định dạng màn hình.4. Hệ thống kiểm tra tên phòng, sức chứa và định dạng là bắt buộc.5. Nếu hợp lệ, hệ thống lưu phòng chiếu.6. Người quản trị có thể sửa hoặc xóa phòng chiếu trong danh sách.
+
+3.4.2. Sơ đồ luồng chi tiết
+Người quản trị mở trang quản lý phòng chiếu.
+Hệ thống hiển thị danh sách phòng và form nhập thông tin phòng.
+Người quản trị nhập tên phòng, sức chứa và định dạng màn hình.
+Hệ thống kiểm tra tên phòng, sức chứa và định dạng là bắt buộc.
+Nếu hợp lệ, hệ thống lưu phòng chiếu.
+Người quản trị có thể sửa hoặc xóa phòng chiếu trong danh sách.
+3.4.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.4.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+name
+Tên phòng
+Text
+Có
+Duy nhất, ví dụ: Phòng A.
+capacity
+Số ghế
+Number
+Có
+Số ghế phải lớn hơn 0.
+screenType
+Định dạng
+Text
+Có
+Ví dụ: 2D, 3D, IMAX.
+
+3.5. Lập lịch chiếu
+3.5.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-05
+Mô tả
+Lập lịch chiếu
+Tác nhân (Actor)
+Người quản trị
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người quản trị chọn Thêm lịch chiếu hoặc Sửa lịch chiếu.
+Điều kiện cần (Pre-Condition)
+Người quản trị đã đăng nhập; hệ thống có dữ liệu phim và phòng chiếu.
+Điều kiện sau (Post-Condition)
+Suất chiếu được tạo mới hoặc cập nhật trong cơ sở dữ liệu.
+Luồng cơ bản (Basic Flow)
+1. Người quản trị mở form lịch chiếu.2. Hệ thống hiển thị danh sách phim, phòng chiếu, thời gian bắt đầu, giá vé, trạng thái và ghi chú.3. Người quản trị chọn phim, phòng, nhập thời gian, giá vé và trạng thái.4. Hệ thống kiểm tra dữ liệu bắt buộc và giá vé lớn hơn 0.5. Nếu hợp lệ, hệ thống lưu Showtime.6. Hệ thống chuyển về danh sách lịch chiếu theo ngày vừa lưu.
+
+3.5.2. Sơ đồ luồng chi tiết
+Người quản trị mở form lịch chiếu.
+Hệ thống hiển thị danh sách phim, phòng chiếu, thời gian bắt đầu, giá vé, trạng thái và ghi chú.
+Người quản trị chọn phim, phòng, nhập thời gian, giá vé và trạng thái.
+Hệ thống kiểm tra dữ liệu bắt buộc và giá vé lớn hơn 0.
+Nếu hợp lệ, hệ thống lưu Showtime.
+Hệ thống chuyển về danh sách lịch chiếu theo ngày vừa lưu.
+3.5.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.5.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+movieId
+Phim
+Select
+Có
+Tham chiếu Movie hợp lệ.
+auditoriumId
+Phòng chiếu
+Select
+Có
+Tham chiếu Auditorium hợp lệ.
+startsAt
+Thời gian bắt đầu
+Datetime
+Có
+Ngày giờ bắt đầu suất chiếu.
+ticketPrice
+Giá vé
+Currency
+Có
+Số tiền lớn hơn 0.
+status
+Trạng thái
+Select
+Có
+SCHEDULED, SELLING, SOLD_OUT, CANCELLED.
+note
+Ghi chú
+Textarea
+Không
+Thông tin bổ sung cho suất chiếu.
+
+3.6. Lọc lịch chiếu
+3.6.1. Đặc tả Use Case
+Thuộc tính
+Nội dung
+Use Case ID
+UC-06
+Mô tả
+Lọc lịch chiếu
+Tác nhân (Actor)
+Người quản trị
+Sự ưu tiên (Priority)
+Cao
+Trigger
+Người quản trị thay đổi bộ lọc trên trang /showtimes.
+Điều kiện cần (Pre-Condition)
+Người quản trị đã đăng nhập; hệ thống có dữ liệu lịch chiếu.
+Điều kiện sau (Post-Condition)
+Danh sách lịch chiếu được hiển thị theo điều kiện lọc.
+Luồng cơ bản (Basic Flow)
+1. Người quản trị mở trang danh sách lịch chiếu.2. Hệ thống hiển thị bộ lọc ngày, phim và phòng chiếu.3. Người quản trị nhập/chọn điều kiện lọc.4. Hệ thống truy vấn lịch chiếu theo ngày, phim và phòng.5. Hệ thống hiển thị kết quả phù hợp trên bảng danh sách.
+
+3.6.2. Sơ đồ luồng chi tiết
+Người quản trị mở trang danh sách lịch chiếu.
+Hệ thống hiển thị bộ lọc ngày, phim và phòng chiếu.
+Người quản trị nhập/chọn điều kiện lọc.
+Hệ thống truy vấn lịch chiếu theo ngày, phim và phòng.
+Hệ thống hiển thị kết quả phù hợp trên bảng danh sách.
+3.6.3. Giao diện
+Tạm thời hệ thống sử dụng giao diện web Thymeleaf tương ứng với chức năng. Chưa đính kèm ảnh chụp màn hình trong tài liệu; khi có UI chốt cuối sẽ bổ sung ảnh minh họa tại mục này.
+3.6.4. Mô tả chi tiết
+Tên kỹ thuật
+Tên tiếng Việt
+Loại
+Bắt buộc?
+Mô tả
+date
+Ngày chiếu
+Date
+Không
+Nếu không chọn, hệ thống dùng ngày hiện tại.
+movieId
+Phim
+Select
+Không
+Lọc theo phim cụ thể.
+auditoriumId
+Phòng chiếu
+Select
+Không
+Lọc theo phòng cụ thể.
+
+PHẦN 4: CÁC COMPONENT, THÔNG BÁO, CẢNH BÁO
+4.1 Component giao diện
+STT
+Component
+Mô tả
+Màn hình sử dụng
+1
+Topbar/Menu
+Điều hướng giữa Lịch chiếu, Phim, Phòng chiếu, Đăng nhập/Đăng ký/Đăng xuất.
+Toàn hệ thống
+2
+Auth Form
+Form đăng nhập và đăng ký tài khoản quản trị.
+/login, /register
+3
+Filter Bar
+Bộ lọc lịch chiếu theo ngày, phim và phòng chiếu.
+/showtimes
+4
+Data Table
+Bảng hiển thị danh sách phim, phòng chiếu và lịch chiếu.
+/movies, /auditoriums, /showtimes
+5
+Movie Picker
+Danh sách chọn phim bằng poster khi lập lịch chiếu.
+/showtimes/new, /showtimes/{id}/edit
+6
+Alert Message
+Thông báo thao tác thành công hoặc lỗi validate.
+Các màn hình form
+
+4.2 Thông báo hệ thống
+STT
+Tình huống
+Thông báo
+1
+Lưu lịch chiếu thành công
+Đã lưu lịch chiếu thành công.
+2
+Xóa lịch chiếu
+Đã xóa lịch chiếu.
+3
+Lưu phim thành công
+Đã lưu phim thành công.
+4
+Xóa phim
+Đã xóa phim.
+5
+Lưu phòng chiếu thành công
+Đã lưu phòng chiếu thành công.
+6
+Xóa phòng chiếu
+Đã xóa phòng chiếu.
+7
+Đăng ký thành công
+Đăng ký thành công. Vui lòng đăng nhập.
+8
+Đăng nhập thất bại
+Tên đăng nhập hoặc mật khẩu không đúng.
+
+4.3 Cảnh báo và validate
+Tên đăng nhập, họ tên, email, mật khẩu là bắt buộc khi đăng ký.
+Email phải đúng định dạng và không trùng với email đã tồn tại.
+Mật khẩu tối thiểu 6 ký tự và xác nhận mật khẩu phải khớp.
+Tên phim, thể loại và thời lượng là bắt buộc; thời lượng phải lớn hơn 0.
+Tên phòng, số ghế và định dạng màn hình là bắt buộc; số ghế phải lớn hơn 0.
+Khi lập lịch chiếu phải chọn phim, phòng, thời gian bắt đầu, giá vé và trạng thái; giá vé phải lớn hơn 0.
+PHẦN 5: LINK ISSUE
+Tạm thời hệ thống chưa liên kết công cụ quản lý issue/Jira.
+STT
+Mã issue
+Nội dung
+Trạng thái
+1
+N/A
+Chưa có issue liên kết cho giai đoạn hiện tại.
+Tạm thời

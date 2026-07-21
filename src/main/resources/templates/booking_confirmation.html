@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Đặt vé thành công - CGV Cinema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Quản lý phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container" style="max-width:600px;">
+  <div style="text-align:center;">
+    <div class="confirmation-icon">✅</div>
+    <h1 style="font-size:1.75rem;font-weight:800;margin-bottom:0.5rem;">Đặt vé thành công!</h1>
+    <p style="color:#8b8fa8;margin-bottom:2rem;">Cảm ơn bạn đã đặt vé tại CGV Cinema. Hãy đến rạp đúng giờ nhé!</p>
+  </div>
+
+  <div class="ticket-card">
+    <div style="text-align:center;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px dashed rgba(255,255,255,0.08);">
+      <div style="font-size:0.75rem;color:#8b8fa8;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem;">Mã đặt vé</div>
+      <div style="font-size:1.5rem;font-weight:800;color:#a78bfa;" th:text="'#' + booking.id"></div>
+    </div>
+
+    <div class="ticket-row">
+      <div class="ticket-label">🎬 Tên phim</div>
+      <div class="ticket-value" th:text="${booking.showtime.movie.title}"></div>
+    </div>
+    <div class="ticket-row">
+      <div class="ticket-label">🕐 Suất chiếu</div>
+      <div class="ticket-value" th:text="${#temporals.format(booking.showtime.startsAt, 'HH:mm - dd/MM/yyyy')}"></div>
+    </div>
+    <div class="ticket-row">
+      <div class="ticket-label">🏟️ Phòng chiếu</div>
+      <div class="ticket-value" th:text="${booking.showtime.auditorium.name}"></div>
+    </div>
+    <div class="ticket-row">
+      <div class="ticket-label">💺 Ghế ngồi</div>
+      <div class="ticket-value" th:text="${booking.seats}"></div>
+    </div>
+    <div class="ticket-row">
+      <div class="ticket-label">📅 Thời gian đặt</div>
+      <div class="ticket-value" th:text="${#temporals.format(booking.bookingDate, 'HH:mm dd/MM/yyyy')}"></div>
+    </div>
+    <div class="ticket-row" style="margin-top:0.5rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.08);border-bottom:none;">
+      <div class="ticket-label" style="font-size:1rem;font-weight:700;color:#f0f0f5;">💰 Tổng tiền</div>
+      <div class="ticket-value price" style="font-size:1.25rem;" th:text="${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:1rem;margin-top:2rem;justify-content:center;">
+    <a th:href="@{/my-bookings}" class="btn btn-primary btn-lg">📋 Xem tất cả vé</a>
+    <a th:href="@{/}" class="btn btn-outline btn-lg">🏠 Về trang chủ</a>
+  </div>
+</div>
+
+</body>
+</html>

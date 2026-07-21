@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký - CGV Cinema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Đăng ký tài khoản CGV Cinema để đặt vé xem phim">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">🎬</span>
+      <div class="logo-text">CGV CINEMA</div>
+    </div>
+
+    <h1 class="auth-title">Tạo tài khoản</h1>
+    <p class="auth-subtitle">Đăng ký để trải nghiệm đặt vé trực tuyến</p>
+
+    <div th:if="${errorMessage}" class="alert alert-danger">
+      <span>⚠️</span> <span th:text="${errorMessage}"></span>
+    </div>
+
+    <form method="post" th:action="@{/register}" data-validate-form novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Tối thiểu 3 ký tự" maxlength="40" autofocus
+               data-required data-min-length="3" data-label="Tên đăng nhập">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fullName">Họ và tên</label>
+        <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Tên hiển thị của bạn"
+               data-required data-label="Họ và tên">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input type="text" id="email" name="email" class="form-control" placeholder="example@email.com"
+               data-required data-email data-label="Email">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="password">Mật khẩu</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="Tối thiểu 6 ký tự"
+                 data-required data-min-length="6" data-label="Mật khẩu">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu"
+                 data-required data-match="password" data-label="Xác nhận mật khẩu" data-match-message="Mật khẩu xác nhận không khớp.">
+        </div>
+      </div>
+      <button type="submit" id="btn-register" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;">
+        ✨ Tạo tài khoản
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
+    </div>
+  </div>
+</div>
+<script th:src="@{/js/form-validation.js}"></script>
+</body>
+</html>

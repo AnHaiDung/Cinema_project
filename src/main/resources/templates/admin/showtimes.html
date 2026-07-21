@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Lịch chiếu - CGV Cinema Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link active">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div class="page-header">
+    <h1 class="page-title">🗓️ Quản lý lịch chiếu</h1>
+    <p class="page-subtitle">Lập lịch, lọc và quản lý các suất chiếu trong ngày.</p>
+  </div>
+
+  <div th:if="${successMessage}" class="alert alert-success">✅ <span th:text="${successMessage}"></span></div>
+  <div th:if="${errorMessage}" class="alert alert-danger">⚠️ <span th:text="${errorMessage}"></span></div>
+
+  <!-- FILTER BAR -->
+  <form th:action="@{/showtimes}" method="get">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>📅 Ngày chiếu</label>
+        <input type="date" name="date" class="form-control" th:value="${searchDate}" style="width:auto;">
+      </div>
+      <div class="filter-group">
+        <label>🎬 Phim</label>
+        <select name="movieId" class="form-control" style="width:auto;">
+          <option value="">-- Tất cả phim --</option>
+          <option th:each="m : ${movies}" th:value="${m.id}" th:text="${m.title}"
+                  th:selected="${m.id == selectedMovieId}"></option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>🏟️ Phòng chiếu</label>
+        <select name="auditoriumId" class="form-control" style="width:auto;">
+          <option value="">-- Tất cả phòng --</option>
+          <option th:each="a : ${auditoriums}" th:value="${a.id}" th:text="${a.name}"
+                  th:selected="${a.id == selectedAuditoriumId}"></option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">🔍 Lọc</button>
+      <a th:href="@{/showtimes}" class="btn btn-outline">↺ Đặt lại</a>
+    </div>
+  </form>
+
+  <div class="admin-layout">
+    <!-- FORM -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" th:text="${isEdit != null and isEdit ? '✏️ Sửa lịch chiếu' : '➕ Thêm lịch chiếu'}"></span>
+          <a th:if="${isEdit != null and isEdit}" th:href="@{/showtimes}" class="btn btn-outline btn-sm">✕ Hủy</a>
+        </div>
+
+        <form th:action="${isEdit != null and isEdit ? '/showtimes/edit/' + showtime.id : '/showtimes/save'}"
+              method="post" data-validate-form novalidate>
+          <div class="form-group">
+            <label class="form-label">Phim *</label>
+            <select name="movieId" class="form-control" data-required data-label="Phim">
+              <option value="">-- Chọn phim --</option>
+              <option th:each="m : ${movies}" th:value="${m.id}" th:text="${m.title}"
+                      th:selected="${showtime.movie != null and showtime.movie.id == m.id}"></option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phòng chiếu *</label>
+            <select name="auditoriumId" class="form-control" data-required data-label="Phòng chiếu">
+              <option value="">-- Chọn phòng --</option>
+              <option th:each="a : ${auditoriums}" th:value="${a.id}" th:text="${a.name}"
+                      th:selected="${showtime.auditorium != null and showtime.auditorium.id == a.id}"></option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Thời gian bắt đầu *</label>
+            <input type="datetime-local" name="startsAt" class="form-control" data-required data-label="Thời gian bắt đầu"
+                   th:value="${showtime.startsAt != null ? #temporals.format(showtime.startsAt, 'yyyy-MM-dd''T''HH:mm') : ''}">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Giá vé (VNĐ) *</label>
+              <input type="text" inputmode="decimal" name="ticketPrice" class="form-control" th:value="${showtime.ticketPrice}" placeholder="120000"
+                     data-required data-number data-min-value="1000" data-label="Giá vé">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trạng thái *</label>
+              <select name="status" class="form-control" data-required data-label="Trạng thái">
+                <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                        th:selected="${showtime.status != null and showtime.status == s}"></option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ghi chú</label>
+            <textarea name="note" class="form-control" rows="2" placeholder="Thông tin thêm..." th:text="${showtime.note}"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <span th:text="${isEdit != null and isEdit ? '💾 Cập nhật' : '➕ Tạo lịch chiếu'}"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div>
+      <div class="card" style="padding:0;">
+        <div class="card-header" style="padding:1.25rem 1.5rem;margin-bottom:0;">
+          <span class="card-title">📋 Lịch chiếu ngày <span th:text="${searchDate}"></span></span>
+          <span style="font-size:0.8rem;color:#8b8fa8;" th:text="${showtimes.size()} + ' suất'"></span>
+        </div>
+
+        <div th:if="${showtimes.empty}" class="empty-state" style="padding:3rem;">
+          <div class="empty-icon">📅</div>
+          <h3>Không có lịch chiếu</h3>
+          <p>Chưa có suất chiếu nào cho ngày này.</p>
+        </div>
+
+        <div class="table-wrapper" th:unless="${showtimes.empty}" style="border:none;border-radius:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Giờ chiếu</th>
+                <th>Phim</th>
+                <th>Phòng</th>
+                <th>Giá vé</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="s : ${showtimes}">
+                <td style="font-weight:700;color:#a78bfa;" th:text="${#temporals.format(s.startsAt, 'HH:mm')}"></td>
+                <td style="font-weight:600;" th:text="${s.movie.title}"></td>
+                <td style="color:#8b8fa8;" th:text="${s.auditorium.name}"></td>
+                <td class="price" th:text="${#numbers.formatDecimal(s.ticketPrice, 0, 'COMMA', 0, 'POINT')}"></td>
+                <td>
+                  <span class="badge"
+                    th:classappend="${s.status.name() == 'SELLING' ? 'badge-selling' :
+                                     s.status.name() == 'SCHEDULED' ? 'badge-scheduled' :
+                                     s.status.name() == 'SOLD_OUT' ? 'badge-sold_out' : 'badge-cancelled'}"
+                    th:text="${s.status}"></span>
+                </td>
+                <td>
+                  <div style="display:flex;gap:0.5rem;">
+                    <a th:href="@{/showtimes/edit/{id}(id=${s.id})}" class="btn btn-outline btn-sm">✏️</a>
+                    <form th:action="@{/showtimes/delete/{id}(id=${s.id})}" method="post" style="margin:0;"
+                          onsubmit="return confirm('Xác nhận xóa lịch chiếu này?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/form-validation.js}"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập - CGV Cinema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Đăng nhập vào hệ thống CGV Cinema">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">🎬</span>
+      <div class="logo-text">CGV CINEMA</div>
+    </div>
+
+    <h1 class="auth-title">Chào mừng trở lại!</h1>
+    <p class="auth-subtitle">Đăng nhập để đặt vé và xem lịch chiếu</p>
+
+    <div th:if="${errorMessage}" class="alert alert-danger">
+      <span>⚠️</span> <span th:text="${errorMessage}"></span>
+    </div>
+    <div th:if="${successMessage}" class="alert alert-success">
+      <span>✅</span> <span th:text="${successMessage}"></span>
+    </div>
+
+    <form method="post" th:action="@{/login}" data-validate-form novalidate>
+      <div class="form-group">
+        <label class="form-label" for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Nhập tên đăng nhập" autofocus
+               data-required data-label="Tên đăng nhập">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu"
+               data-required data-label="Mật khẩu">
+      </div>
+      <button type="submit" id="btn-login" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;">
+        🔓 Đăng nhập
+      </button>
+    </form>
+
+    <div class="auth-divider">hoặc</div>
+
+    <div class="auth-footer">
+      Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
+    </div>
+
+<!--    <div style="margin-top:1.5rem;padding:1rem;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06);">-->
+<!--      <p style="font-size:0.75rem;color:#555870;text-align:center;margin-bottom:0.5rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Tài khoản demo</p>-->
+<!--      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">-->
+<!--        <div style="font-size:0.78rem;color:#8b8fa8;">Admin: <span style="color:#f0f0f5;font-weight:600;">admin / admin123</span></div>-->
+<!--        <div style="font-size:0.78rem;color:#8b8fa8;">KH: <span style="color:#f0f0f5;font-weight:600;">customer / customer123</span></div>-->
+<!--      </div>-->
+<!--    </div>-->
+  </div>
+</div>
+<script th:src="@{/js/form-validation.js}"></script>
+</body>
+</html>

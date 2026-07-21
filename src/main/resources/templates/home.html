@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>CGV Cinema - Đặt vé xem phim trực tuyến</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CGV Cinema - Xem danh sách phim đang chiếu và đặt vé trực tuyến nhanh chóng, tiện lợi.">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand">
+      <span class="brand-icon">🎬</span> CGV Cinema
+    </a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link active">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Quản lý phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated() or isAnonymous()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+      
+      <div style="display:flex;gap:0.5rem;" sec:authorize="isAnonymous()">
+        <a th:href="@{/login}" class="btn btn-primary btn-sm">Đăng nhập</a>
+        <a th:href="@{/register}" class="btn btn-outline btn-sm">Đăng ký</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div class="hero-section">
+    <h1>🎬 Đặt vé ngay hôm nay</h1>
+    <p>Khám phá những bộ phim hot nhất đang chiếu. Chọn suất chiếu, đặt ghế và tận hưởng!</p>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">🔥 Phim đang chiếu</h2>
+    <span style="font-size:0.85rem;color:#8b8fa8;" th:text="'Tổng cộng ' + ${movies.size()} + ' phim'"></span>
+  </div>
+
+  <div th:if="${movies.empty}" class="empty-state">
+    <div class="empty-icon">🎞️</div>
+    <h3>Chưa có phim nào</h3>
+    <p>Quản trị viên chưa thêm phim. Hãy quay lại sau nhé!</p>
+  </div>
+
+  <div class="movies-grid" th:unless="${movies.empty}">
+    <a th:each="movie : ${movies}" th:href="@{/movie/{id}(id=${movie.id})}" class="movie-card">
+      <div class="movie-poster">
+        <img th:if="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}"
+             th:src="${movie.posterUrl}" th:alt="${movie.title}" loading="lazy">
+        <div th:unless="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}" class="movie-poster-no-image">
+          <span>🎞️</span>
+          <span style="font-size:0.75rem;color:#555870;">No Poster</span>
+        </div>
+        <span class="age-badge" th:if="${movie.ageRating}" th:text="${movie.ageRating}"></span>
+        <div class="movie-poster-overlay">
+          <button class="btn btn-primary btn-sm">🎟️ Đặt vé</button>
+        </div>
+      </div>
+      <div class="movie-info">
+        <div class="movie-title" th:text="${movie.title}"></div>
+        <div class="movie-meta">
+          <span class="movie-genre" th:text="${movie.genre}"></span>
+          <span class="movie-duration">⏱ <span th:text="${movie.durationMinutes}"></span> phút</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${movie.title} + ' - CGV Cinema'">Chi tiết phim - CGV Cinema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" th:content="${movie.description}">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Quản lý phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated() or isAnonymous()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+      
+      <div style="display:flex;gap:0.5rem;" sec:authorize="isAnonymous()">
+        <a th:href="@{/login}" class="btn btn-primary btn-sm">Đăng nhập</a>
+        <a th:href="@{/register}" class="btn btn-outline btn-sm">Đăng ký</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div style="margin-bottom:1.5rem;">
+    <a th:href="@{/}" style="color:#8b8fa8;font-size:0.875rem;display:inline-flex;align-items:center;gap:0.5rem;">
+      ← Quay lại danh sách phim
+    </a>
+  </div>
+
+  <div class="movie-detail-hero">
+    <div class="movie-detail-poster">
+      <img th:if="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}"
+           th:src="${movie.posterUrl}" th:alt="${movie.title}">
+      <div th:unless="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}"
+           style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;color:#333;">🎞️</div>
+    </div>
+
+    <div class="movie-detail-info">
+      <h1 class="movie-detail-title" th:text="${movie.title}"></h1>
+
+      <div class="movie-detail-meta">
+        <span class="meta-chip">🎭 Thể loại: <span th:text="${movie.genre}"></span></span>
+        <span class="meta-chip">⏱ <span th:text="${movie.durationMinutes}"></span> phút</span>
+        <span class="meta-chip" th:if="${movie.ageRating}">🔞 <span th:text="${movie.ageRating}"></span></span>
+        <span class="meta-chip" th:if="${movie.releaseDate}">📅 <span th:text="${movie.releaseDate}"></span></span>
+      </div>
+
+      <p class="movie-description" th:text="${movie.description ?: 'Chưa có mô tả cho bộ phim này.'}"></p>
+
+      <div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:#8b8fa8;text-transform:uppercase;letter-spacing:0.05em;">🕐 Chọn suất chiếu</h3>
+
+        <div th:if="${showtimes.empty}" class="alert alert-info">
+          <span>ℹ️</span> Hiện chưa có suất chiếu nào cho bộ phim này.
+        </div>
+
+        <div th:unless="${showtimes.empty}" class="showtime-slots">
+          <a th:each="st : ${showtimes}"
+             sec:authorize="isAuthenticated()"
+             th:href="@{/booking/{id}(id=${st.id})}"
+             class="showtime-slot">
+            <div class="slot-time" th:text="${#temporals.format(st.startsAt, 'HH:mm')}"></div>
+            <div class="slot-room" th:text="${st.auditorium.name}"></div>
+            <div class="slot-price" th:text="${#numbers.formatDecimal(st.ticketPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+          </a>
+          <div sec:authorize="isAnonymous()" class="alert alert-info" style="width:100%">
+            <span>🔐</span> Vui lòng <a th:href="@{/login}" style="color:#60a5fa;font-weight:600;">đăng nhập</a> để đặt vé.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

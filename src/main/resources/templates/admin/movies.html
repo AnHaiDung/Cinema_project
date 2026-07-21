@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý phim - CGV Cinema Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link active">🎞️ Phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div class="page-header">
+    <h1 class="page-title">🎞️ Quản lý phim</h1>
+    <p class="page-subtitle">Thêm, sửa, xóa danh sách phim và upload ảnh poster từ máy tính của bạn.</p>
+  </div>
+
+  <div th:if="${successMessage}" class="alert alert-success">✅ <span th:text="${successMessage}"></span></div>
+  <div th:if="${errorMessage}" class="alert alert-danger">⚠️ <span th:text="${errorMessage}"></span></div>
+
+  <div class="admin-layout">
+    <!-- FORM PANEL -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" th:text="${movie.id != null ? '✏️ Sửa phim' : '➕ Thêm phim mới'}"></span>
+          <a th:if="${movie.id != null}" th:href="@{/movies}" class="btn btn-outline btn-sm">✕ Hủy</a>
+        </div>
+
+        <form th:action="${movie.id != null ? '/movies/edit/' + movie.id : '/movies/save'}"
+              method="post" enctype="multipart/form-data" data-validate-form novalidate>
+
+          <div class="form-group">
+            <label class="form-label">Tên phim *</label>
+            <input type="text" name="title" class="form-control" th:value="${movie.title}" placeholder="VD: Avengers: Endgame"
+                   data-required data-label="Tên phim">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Thể loại *</label>
+            <input type="text" name="genre" class="form-control" th:value="${movie.genre}" placeholder="VD: Hành động, Viễn tưởng"
+                   data-required data-label="Thể loại">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Thời lượng (phút) *</label>
+              <input type="text" inputmode="numeric" name="durationMinutes" class="form-control" th:value="${movie.durationMinutes}" placeholder="120"
+                     data-required data-number data-min-value="1" data-label="Thời lượng">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phân loại tuổi</label>
+              <select name="ageRating" class="form-control">
+                <option value="" th:selected="${movie.ageRating == null}">-- Chọn --</option>
+                <option value="P" th:selected="${movie.ageRating == 'P'}">P - Mọi lứa tuổi</option>
+                <option value="T13" th:selected="${movie.ageRating == 'T13'}">T13 - Trên 13 tuổi</option>
+                <option value="T16" th:selected="${movie.ageRating == 'T16'}">T16 - Trên 16 tuổi</option>
+                <option value="T18" th:selected="${movie.ageRating == 'T18'}">T18 - Trên 18 tuổi</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ngày phát hành</label>
+            <input type="date" name="releaseDate" class="form-control" th:value="${movie.releaseDate}">
+          </div>
+
+          <!-- POSTER UPLOAD -->
+          <div class="form-group">
+            <label class="form-label">Poster (upload từ máy)</label>
+            <div class="file-input-wrapper">
+              <label class="file-input-label" for="posterFile" id="poster-file-label">
+                📁 Chọn ảnh poster...
+              </label>
+              <input type="file" id="posterFile" name="posterFile" accept="image/*"
+                     onchange="previewPoster(this)">
+            </div>
+            <!-- Existing poster URL fallback -->
+            <input type="hidden" name="posterUrl" th:value="${movie.posterUrl}">
+            <div style="margin-top:0.5rem;" th:if="${movie.posterUrl != null and !movie.posterUrl.isEmpty()}">
+              <div class="poster-preview">
+                <img th:src="${movie.posterUrl}" alt="Poster hiện tại">
+              </div>
+              <div style="font-size:0.75rem;color:#8b8fa8;margin-top:0.25rem;">Poster hiện tại (chọn file mới để thay thế)</div>
+            </div>
+            <div id="poster-preview-new" style="display:none;margin-top:0.5rem;">
+              <div class="poster-preview"><img id="poster-preview-img" src="" alt="Preview"></div>
+              <div style="font-size:0.75rem;color:#34d399;margin-top:0.25rem;">✓ File mới đã được chọn</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mô tả</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Tóm tắt nội dung phim..." th:text="${movie.description}"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <span th:text="${movie.id != null ? '💾 Cập nhật phim' : '➕ Thêm phim'}"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE PANEL -->
+    <div>
+      <div class="card" style="padding:0;">
+        <div class="card-header" style="padding:1.25rem 1.5rem;margin-bottom:0;">
+          <span class="card-title">📋 Danh sách phim</span>
+          <span style="font-size:0.8rem;color:#8b8fa8;" th:text="${movies.size()} + ' phim'"></span>
+        </div>
+
+        <div th:if="${movies.empty}" class="empty-state" style="padding:3rem;">
+          <div class="empty-icon">🎞️</div>
+          <h3>Chưa có phim nào</h3>
+          <p>Hãy thêm phim đầu tiên!</p>
+        </div>
+
+        <div class="table-wrapper" th:unless="${movies.empty}" style="border:none;border-radius:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Poster</th>
+                <th>Tên phim</th>
+                <th>Thể loại</th>
+                <th>Phút</th>
+                <th>Tuổi</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="m : ${movies}">
+                <td>
+                  <div class="poster-preview">
+                    <img th:if="${m.posterUrl != null and !m.posterUrl.isEmpty()}" th:src="${m.posterUrl}" th:alt="${m.title}">
+                    <span th:unless="${m.posterUrl != null and !m.posterUrl.isEmpty()}">🎞️</span>
+                  </div>
+                </td>
+                <td style="font-weight:600;" th:text="${m.title}"></td>
+                <td style="color:#8b8fa8;" th:text="${m.genre}"></td>
+                <td th:text="${m.durationMinutes}"></td>
+                <td>
+                  <span class="badge badge-scheduled" th:if="${m.ageRating}" th:text="${m.ageRating}"></span>
+                  <span th:unless="${m.ageRating}" style="color:#555870;">—</span>
+                </td>
+                <td>
+                  <div style="display:flex;gap:0.5rem;">
+                    <a th:href="@{/movies/edit/{id}(id=${m.id})}" class="btn btn-outline btn-sm">✏️ Sửa</a>
+                    <form th:action="@{/movies/delete/{id}(id=${m.id})}" method="post" style="margin:0;"
+                          onsubmit="return confirm('Xác nhận xóa phim?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function previewPoster(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('poster-preview-img').src = e.target.result;
+      document.getElementById('poster-preview-new').style.display = 'block';
+      document.getElementById('poster-file-label').textContent = '📁 ' + input.files[0].name;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+
+<script th:src="@{/js/form-validation.js}"></script>
+</body>
+</html>

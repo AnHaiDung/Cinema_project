@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Đặt vé - CGV Cinema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <style>
+    .booking-layout { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+    @media (max-width: 900px) { .booking-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a th:href="@{/}" class="nav-brand"><span class="brand-icon">🎬</span> CGV Cinema</a>
+    <div class="nav-links">
+      <a th:href="@{/}" sec:authorize="!hasRole('ADMIN')" class="nav-link">🏠 Trang chủ</a>
+      <a th:href="@{/my-bookings}" sec:authorize="hasRole('CUSTOMER')" class="nav-link">🎟️ Vé của tôi</a>
+      
+      <a th:href="@{/showtimes}" sec:authorize="hasRole('ADMIN')" class="nav-link">🗓️ Lịch chiếu</a>
+      <a th:href="@{/movies}" sec:authorize="hasRole('ADMIN')" class="nav-link">🎞️ Quản lý phim</a>
+      <a th:href="@{/auditoriums}" sec:authorize="hasRole('ADMIN')" class="nav-link">🏟️ Phòng chiếu</a>
+      
+      <div class="nav-divider" sec:authorize="isAuthenticated()"></div>
+      
+      <div class="nav-user" sec:authorize="isAuthenticated()">
+        <span class="user-badge">
+          <span sec:authorize="hasRole('ADMIN')">👑 Admin: </span>
+          <span sec:authorize="hasRole('CUSTOMER')">👤 Khách: </span>
+          <span sec:authentication="name"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0; display:inline-block;">
+          <button class="btn btn-outline btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="main-container">
+  <div style="margin-bottom:1.5rem;">
+    <a th:href="@{/movie/{id}(id=${showtime.movie.id})}" style="color:#8b8fa8;font-size:0.875rem;display:inline-flex;align-items:center;gap:0.5rem;">
+      ← Quay lại thông tin phim
+    </a>
+  </div>
+
+  <div class="page-header">
+    <h1 class="page-title">🎟️ Chọn ghế ngồi</h1>
+    <p class="page-subtitle" th:text="${showtime.movie.title} + ' | ' + ${showtime.auditorium.name} + ' | ' + ${#temporals.format(showtime.startsAt, 'HH:mm dd/MM/yyyy')}"></p>
+  </div>
+
+  <div th:if="${errorMessage}" class="alert alert-danger">
+    <span>⚠️</span> <span th:text="${errorMessage}"></span>
+  </div>
+
+  <form th:action="@{/booking/{id}/confirm(id=${showtime.id})}" method="post" id="booking-form" data-validate-form novalidate>
+    <input type="hidden" name="seats" id="selected-seats-input"
+           data-required data-label="Ghế" data-required-message="Vui lòng chọn ít nhất 1 ghế." data-error-target="#booking-seat-error-host">
+    <div class="booking-layout">
+      <!-- SEAT MAP -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🏟️ Sơ đồ chỗ ngồi — <span th:text="${showtime.auditorium.screenType}"></span></span>
+          <span style="font-size:0.8rem;color:#8b8fa8;" th:text="${showtime.auditorium.capacity} + ' chỗ'"></span>
+        </div>
+
+        <div class="seat-screen-wrapper">
+          <div class="screen-label">📽️ MÀN HÌNH</div>
+
+          <!-- 8 rows x 10 seats grid. Will be controlled dynamically via JS -->
+          <div class="seat-grid" id="seat-grid">
+            <!-- Seats rendered by JavaScript below -->
+          </div>
+
+          <div class="seat-legend">
+            <div class="legend-item"><div class="legend-icon legend-available"></div>Còn trống</div>
+            <div class="legend-item"><div class="legend-icon legend-selected"></div>Đã chọn</div>
+            <div class="legend-item"><div class="legend-icon legend-occupied"></div>Đã đặt</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKING SUMMARY -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📋 Thông tin đặt vé</span>
+          </div>
+
+          <div style="margin-bottom:1.25rem;">
+            <div style="font-size:0.75rem;color:#8b8fa8;font-weight:600;text-transform:uppercase;margin-bottom:0.5rem;">Phim</div>
+            <div style="font-weight:700;" th:text="${showtime.movie.title}"></div>
+          </div>
+          <div style="margin-bottom:1.25rem;">
+            <div style="font-size:0.75rem;color:#8b8fa8;font-weight:600;text-transform:uppercase;margin-bottom:0.5rem;">Phòng</div>
+            <div style="font-weight:600;" th:text="${showtime.auditorium.name}"></div>
+          </div>
+          <div style="margin-bottom:1.25rem;">
+            <div style="font-size:0.75rem;color:#8b8fa8;font-weight:600;text-transform:uppercase;margin-bottom:0.5rem;">Suất chiếu</div>
+            <div style="font-weight:600;" th:text="${#temporals.format(showtime.startsAt, 'HH:mm - dd/MM/yyyy')}"></div>
+          </div>
+          <div style="margin-bottom:1.25rem;">
+            <div style="font-size:0.75rem;color:#8b8fa8;font-weight:600;text-transform:uppercase;margin-bottom:0.5rem;">Giá vé / ghế</div>
+            <div class="price" th:text="${#numbers.formatDecimal(showtime.ticketPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}"></div>
+          </div>
+
+          <div class="booking-summary">
+            <div class="summary-row">
+              <span>Ghế đã chọn:</span>
+              <span class="value" id="summary-seats">—</span>
+            </div>
+            <div class="summary-row">
+              <span>Số lượng:</span>
+              <span class="value" id="summary-count">0</span>
+            </div>
+            <div class="summary-row summary-total" style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">
+              <span>Tổng tiền:</span>
+              <span class="value" id="summary-total">0 đ</span>
+            </div>
+            <div id="booking-seat-error-host"></div>
+          </div>
+
+          <button type="submit" id="btn-book" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:1.25rem;">
+            🎟️ Xác nhận đặt vé
+          </button>
+          <p style="text-align:center;font-size:0.78rem;color:#555870;margin-top:0.75rem;">Chọn ít nhất 1 ghế để tiếp tục</p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script th:inline="javascript">
+  const ROWS = 8;
+  const COLS = 10;
+  const TICKET_PRICE = /*[[${showtime.ticketPrice}]]*/ 100000;
+  const occupiedSeatsRaw = /*[[${occupiedSeats}]]*/ [];
+  const occupiedSeats = new Set(occupiedSeatsRaw);
+
+  const ROWS_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  let selectedSeats = new Set();
+
+  function buildGrid() {
+    const grid = document.getElementById('seat-grid');
+    grid.innerHTML = '';
+
+    for (let r = 0; r < ROWS; r++) {
+      const row = document.createElement('div');
+      row.className = 'seat-row';
+
+      const rowLabel = document.createElement('div');
+      rowLabel.className = 'seat-row-label';
+      rowLabel.textContent = ROWS_LABELS[r];
+      row.appendChild(rowLabel);
+
+      for (let c = 1; c <= COLS; c++) {
+        if (c === 6) {
+          const gap = document.createElement('div');
+          gap.className = 'seat-gap';
+          row.appendChild(gap);
+        }
+
+        const seatId = ROWS_LABELS[r] + c;
+        const seat = document.createElement('div');
+        seat.className = 'seat';
+        seat.dataset.seat = seatId;
+        seat.textContent = c;
+
+        if (occupiedSeats.has(seatId)) {
+          seat.classList.add('seat-occupied');
+          seat.title = 'Đã có người đặt';
+        } else {
+          seat.addEventListener('click', () => toggleSeat(seat, seatId));
+        }
+
+        row.appendChild(seat);
+      }
+
+      grid.appendChild(row);
+    }
+  }
+
+  function toggleSeat(el, seatId) {
+    if (selectedSeats.has(seatId)) {
+      selectedSeats.delete(seatId);
+      el.classList.remove('seat-selected');
+    } else {
+      selectedSeats.add(seatId);
+      el.classList.add('seat-selected');
+    }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const count = selectedSeats.size;
+    const seatsArr = Array.from(selectedSeats).sort();
+    const total = count * TICKET_PRICE;
+
+    document.getElementById('summary-seats').textContent = count > 0 ? seatsArr.join(', ') : '—';
+    document.getElementById('summary-count').textContent = count;
+    document.getElementById('summary-total').textContent = total.toLocaleString('vi-VN') + ' đ';
+    document.getElementById('selected-seats-input').value = seatsArr.join(',');
+  }
+
+  buildGrid();
+</script>
+<script th:src="@{/js/form-validation.js}"></script>
+
+</body>
+</html>
